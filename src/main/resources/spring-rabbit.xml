@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans default-lazy-init="true"
+       xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans-4.3.xsd"
+       xmlns:rabbit="http://www.springframework.org/schema/rabbit">
+
+    <!--创建一个RabbitFactory连接工厂-->
+    <rabbit:connection-factory id="connectionFactory" host="192.168.182.142" port="5672" username="user_yhy" password="123" virtual-host="/vhost_yhy"/>
+    <!--定义一个rabbitTemple 模板，指定连接工厂以及定义exchange（交换机）-->
+    <rabbit:template id="rabbitTemplate" connection-factory="connectionFactory" exchange="topicExchange"/>
+    <!--MQ管理，包括队列，交换机声明等-->
+    <rabbit:admin connection-factory="connectionFactory"/>
+    <!--定义队列,自动声明-->
+    <rabbit:queue name="myQueue"  durable="true" auto-declare="true"/>
+    <!--定义交换机，自动声明-->
+    <rabbit:fanout-exchange name="fanoutExchange" auto-declare="true">
+        <rabbit:bindings>
+            <rabbit:binding queue="myQueue"/>
+        </rabbit:bindings>
+    </rabbit:fanout-exchange>
+<!--其他的交换机模式-->
+   <!-- <rabbit:topic-exchange name="topicExchange" auto-declare="true">
+        <rabbit:bindings>
+            <rabbit:binding pattern="" queue="myTopicQueue"></rabbit:binding>
+        </rabbit:bindings>
+    </rabbit:topic-exchange>
+-->
+    <!--队列监听：监听消费者-->
+    <rabbit:listener-container connection-factory="connectionFactory">
+        <rabbit:listener ref="springConsumer" method="consumerTest" queue-names="myQueue"/>
+    </rabbit:listener-container>
+   <!--消费者-->
+    <bean id="springConsumer" class="com.yang.rabbitmq.spring.SpringConsumer"/>
+</beans>
